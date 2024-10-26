@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask
 from profile.routes import profile_bp
 import os
