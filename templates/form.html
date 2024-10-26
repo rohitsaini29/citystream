@@ -1,91 +1,184 @@
-<!-- templates/form.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CityStream - Profile Form</title>
+    <title>CityStream - Profile Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"], select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .flash-messages {
-            margin-bottom: 20px;
-        }
-        .flash-message {
+        .token-box {
+            word-break: break-all;
+            background-color: #f8f9fa;
             padding: 10px;
-            margin-bottom: 10px;
             border-radius: 4px;
         }
-        .error {
-            background-color: #ffebee;
-            color: #c62828;
-        }
-        .success {
-            background-color: #e8f5e9;
-            color: #2e7d32;
+        .api-docs {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>CityStream Profile</h1>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">CityStream</a>
+            {% if is_admin %}
+            <div class="ms-auto">
+                <a href="{{ url_for('profile.logout') }}" class="btn btn-light">Logout</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
                 {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}" role="alert">
                         {{ message }}
                     </div>
                 {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+            {% endif %}
+        {% endwith %}
 
-    <form method="POST">
-        <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
+        <div class="row">
+            <!-- Profile Submission Form -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title h5 mb-0">Submit Your Profile</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Name:</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="city" class="form-label">City:</label>
+                                <select class="form-control" id="city" name="city" required>
+                                    <option value="">Select a city</option>
+                                    {% for city in cities %}
+                                        <option value="{{ city.id }}">{{ city.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Profile</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Section -->
+            <div class="col-md-6">
+                {% if not is_admin %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title h5 mb-0">Admin Login</h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username:</label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password:</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                                <button type="submit" name="admin_login" class="btn btn-primary">Login</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Admin Panel -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title h5 mb-0">Admin Panel - User Profiles</h2>
+                        </div>
+                        <div class="card-body">
+                            {% if profiles %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>User Name</th>
+                                                <th>City</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for profile in profiles %}
+                                                <tr>
+                                                    <td>{{ profile['User Name'] }}</td>
+                                                    <td>{{ profile['City'] }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No profiles submitted yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- API Information -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h2 class="card-title h5 mb-0">API Information</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <h6>Your API Token:</h6>
+                                <div class="token-box">
+                                    {{ api_token }}
+                                </div>
+                            </div>
+                            
+                            <div class="api-docs">
+                                <h6>Available Endpoints:</h6>
+                                <ul class="list-unstyled">
+                                    <li><code>GET /api/cities</code> - Get all cities</li>
+                                    <li><code>POST /api/profile</code> - Submit a new profile</li>
+                                    <li><code>GET /api/profiles</code> - Get all profiles (admin only)</li>
+                                </ul>
+                                
+                                <h6 class="mt-3">Example Usage:</h6>
+                                <pre class="bg-light p-2 rounded"><code>
+# Python example using requests
+import requests
+
+headers = {
+    'X-API-Token': '{{ api_token }}',
+    'Content-Type': 'application/json'
+}
+
+# Get cities
+response = requests.get('http://your-domain/api/cities', 
+                       headers=headers)
+
+# Submit profile
+data = {
+    'name': 'John Doe',
+    'city_id': '1'
+}
+response = requests.post('http://your-domain/api/profile',
+                        headers=headers,
+                        json=data)
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
         </div>
-        
-        <div class="form-group">
-            <label for="city">City:</label>
-            <select id="city" name="city" required>
-                <option value="">Select a city</option>
-                {% for city in cities %}
-                    <option value="{{ city.id }}">{{ city.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <button type="submit">Submit</button>
-    </form>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 </body>
 </html>
